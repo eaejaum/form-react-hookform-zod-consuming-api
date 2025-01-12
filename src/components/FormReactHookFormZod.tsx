@@ -3,23 +3,40 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon, Loader } from "lucide-react";
 import { useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { useHookFormMask } from "use-mask-input";
 import { z } from "zod";
 
-const UserRegisterSchema = z.object({
-  name: z.string().min(1, 'Campo nome obrigatório'), // or .min(1, {message: 'Campo nome obrigatório'})
-  email: z.string().min(1, 'Campo email obrigatório').email('Email inválido'),
-  password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
-  password_confirmation: z.string().min(8, 'A confirmação de senha deve ter no mínimo 8 caracteres'),
-  phone: z.string().min(1, 'Campo telefone obrigatório').regex(/^\(\d{2}\) \d{5}-\d{4}$/, 'Telefone inválido'),
-  cpf: z.string().min(1, 'Campo CPF obrigatório').regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido'),
-  zipcode: z.string().min(1, 'Campo CEP obrigatório').regex(/^\d{5}-\d{3}$/, 'CEP inválido'),
-  city: z.string().min(1, 'Campo cidade obrigatório'),
-  address: z.string().min(1, 'Campo endereço obrigatório'),
-  terms: z.boolean({message: 'Você precisa aceitar os termos de uso'})
-}).refine((data) => {
-  return data.password === data.password_confirmation
-}, {message: 'As senhas devem ser iguais', path: ['password_confirmation']});
+const UserRegisterSchema = z
+  .object({
+    name: z.string().min(1, "Campo nome obrigatório"), // or .min(1, {message: 'Campo nome obrigatório'})
+    email: z.string().min(1, "Campo email obrigatório").email("Email inválido"),
+    password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
+    password_confirmation: z
+      .string()
+      .min(8, "A confirmação de senha deve ter no mínimo 8 caracteres"),
+    phone: z
+      .string()
+      .min(1, "Campo telefone obrigatório")
+      .regex(/^\(\d{2}\) \d{5}-\d{4}$/, "Telefone inválido"),
+    cpf: z
+      .string()
+      .min(1, "Campo CPF obrigatório")
+      .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido"),
+    zipcode: z
+      .string()
+      .min(1, "Campo CEP obrigatório")
+      .regex(/^\d{5}-\d{3}$/, "CEP inválido"),
+    city: z.string().min(1, "Campo cidade obrigatório"),
+    address: z.string().min(1, "Campo endereço obrigatório"),
+    terms: z.boolean({ message: "Você precisa aceitar os termos de uso" }),
+  })
+  .refine(
+    (data) => {
+      return data.password === data.password_confirmation;
+    },
+    { message: "As senhas devem ser iguais", path: ["password_confirmation"] }
+  );
 
 type UserRegister = z.infer<typeof UserRegisterSchema>;
 
@@ -29,9 +46,10 @@ export default function Form() {
     handleSubmit,
     setValue,
     setError,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<UserRegister>({
-    resolver: zodResolver(UserRegisterSchema)
+    resolver: zodResolver(UserRegisterSchema),
   });
   const registerWithMask = useHookFormMask(register);
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
@@ -64,10 +82,16 @@ export default function Form() {
 
     if (!res.ok) {
       for (const field in resData.errors) {
-        setError(field as keyof UserRegister, { type: "manual", message: resData.errors[field] });
+        setError(field as keyof UserRegister, {
+          type: "manual",
+          message: resData.errors[field],
+        });
       }
+      toast.error('Erro ao cadastrar usuário')
     } else {
       console.log(resData);
+      toast.success('Usuário cadastrado com sucesso')
+      reset();
     }
   }
 
@@ -75,11 +99,7 @@ export default function Form() {
     <form onSubmit={handleSubmit(submitForm)}>
       <div className="mb-4">
         <label htmlFor="name">Nome Completo</label>
-        <input
-          type="text"
-          id="name"
-          {...register("name")}
-        />
+        <input type="text" id="name" {...register("name")} />
         {/* Sugestão de exibição de erro de validação */}
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="name" />
@@ -87,12 +107,7 @@ export default function Form() {
       </div>
       <div className="mb-4">
         <label htmlFor="email">E-mail</label>
-        <input
-          className=""
-          type="email"
-          id="email"
-          {...register("email")}
-        />
+        <input className="" type="email" id="email" {...register("email")} />
 
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="email" />
@@ -182,7 +197,7 @@ export default function Form() {
           type="text"
           id="cep"
           {...registerWithMask("zipcode", ["99999-999"], {
-            onBlur: handleZipCodeBlur
+            onBlur: handleZipCodeBlur,
           })}
         />
         <p className="text-xs text-red-400 mt-1">
