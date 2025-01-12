@@ -1,5 +1,5 @@
 import FormHeader from './components/FormHeader';
-import Form from './components/Form';
+import Form from './components/FormReactHookFormZod';
 
 function App() {
   return (
