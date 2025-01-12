@@ -1,11 +1,24 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
+import { withMask } from "use-mask-input";
 // import { EyeOffIcon } from 'lucide-react';
 
 export default function Form() {
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] =
-    useState<boolean>(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState<boolean>(false);
+  const [address, setAddress] = useState({ city: '', street: '' });
+
+  async function handleZipCodeBlur(e: React.FocusEvent<HTMLInputElement, Element>) {
+    const zipcode = e.target.value;
+    const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${zipcode}`);
+    if(res.ok) {
+      const data = await res.json();
+      setAddress({
+        city: data.city,
+        street: data.street
+      })
+    }
+  }
 
   return (
     <form>
@@ -68,19 +81,20 @@ export default function Form() {
       </div>
       <div className="mb-4">
         <label htmlFor="phone">Telefone Celular</label>
-        <input type="text" id="phone" />
+        <input type="text" id="phone" ref={withMask('(99) 99999-9999')}/>
       </div>
       <div className="mb-4">
         <label htmlFor="cpf">CPF</label>
-        <input type="text" id="cpf" />
+        <input type="text" id="cpf" ref={withMask('999.999.999-99')} />
       </div>
       <div className="mb-4">
         <label htmlFor="cep">CEP</label>
-        <input type="text" id="cep" />
+        <input type="text" id="cep" ref={withMask('99.999-999')} onBlur={(e) => handleZipCodeBlur(e)} />
       </div>
       <div className="mb-4">
         <label htmlFor="address">Endereço</label>
         <input
+          value={address.street}
           className="disabled:bg-slate-200"
           type="text"
           id="address"
@@ -91,6 +105,7 @@ export default function Form() {
       <div className="mb-4">
         <label htmlFor="city">Cidade</label>
         <input
+          value={address.city}
           className="disabled:bg-slate-200"
           type="text"
           id="city"
